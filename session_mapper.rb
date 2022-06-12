@@ -27,9 +27,10 @@ class SessionMapper
     Logging.log "New Sessions: #{new_sessions.count}"
     Logging.log "   Available: #{new_sessions_available.count}"
 
-    Logging.log "migrating booked sessions"
+    Logging.log "\nmigrating booked sessions"
     migrate_booked_sessions
-    Logging.log "New Sessions: #{new_sessions.count}"
+
+    Logging.log "\nNew Sessions: #{new_sessions.count}"
     Logging.log "   Available: #{new_sessions_available.count}"
   end
 
@@ -37,12 +38,8 @@ class SessionMapper
 
   def migrate_booked_sessions
     ranker = Ranker.new(old_sessions_booked, new_sessions_available)
-    best_fit = ranker.lowest_total_delta
+    ranker.apply_best_fit
 
-    old_sessions_booked.each_with_index do |old_session, index|
-      new_session = best_fit[index][0]
-      new_session.assign(old_session)
-    end
   end
 
   def new_sessions_available
@@ -75,11 +72,18 @@ class Ranker
     Logging.log "ranking #{old_sessions.count} old sessions into #{new_sessions.count} new_sessions"
   end
 
-  def lowest_total_delta
-    @lowest_total_delta ||= ranked_combinations_by_total_delta.first
+  def apply_best_fit
+    old_sessions.each_with_index do |old_session, index|
+      new_session = lowest_total_delta[index][0]
+      new_session.assign(old_session)
+    end
   end
 
   private
+
+  def lowest_total_delta
+    @lowest_total_delta ||= ranked_combinations_by_total_delta.first
+  end
 
   def ranked_combinations_by_total_delta
     @ranked_combinations ||= viable_combinations.sort_by do |result|
