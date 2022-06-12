@@ -15,6 +15,14 @@ module Session
     def set_state(new_state)
       @state = new_state
     end
+
+    def summary
+      {
+        starts_at: starts_at,
+        ends_at: ends_at,
+        state: state
+      }
+    end
   end
 
   class New < Base
@@ -49,6 +57,14 @@ module Session
 
     def available?
       state == "available"
+    end
+
+    def suspended?
+      state == "suspended"
+    end
+
+    def new_session_summary
+      new_session&.summary
     end
   end
 end

@@ -26,30 +26,39 @@ class SessionMapper
   def migrate_sessions
     Logging.log "Old Sessions: #{old_sessions.count}"
     Logging.log "      Booked: #{old_sessions_booked.count}"
-    Logging.log "   Available: #{old_sessions_available.count}"
+    Logging.log "   Available: #{old_sessions_available.count}\n"
     Logging.log "New Sessions: #{new_sessions.count}"
     Logging.log "   Available: #{new_sessions_available.count}"
 
     Logging.log "\nmigrating booked sessions"
     migrate_booked_sessions
 
-    Logging.log "\nNew Sessions: #{new_sessions.count}"
-    Logging.log "   Available: #{new_sessions_available.count}"
-
+    Logging.log "\nmigrating available sessions"
     migrate_available_sessions
 
-    Logging.log "\nNew Sessions: #{new_sessions.count}"
-    Logging.log "   Available: #{new_sessions_available.count}"
+    new_sessions_summary
   end
 
   private
 
+  def new_sessions_summary
+    old_sessions.reject(&:suspended?).each_with_object({}) do |old_session, hash|
+      hash[old_session.starts_at] = old_session.new_session_summary
+    end
+  end
+
   def migrate_booked_sessions
     Ranker.rank_and_migrate!(old_sessions_booked, new_sessions_available)
+
+    Logging.log "\nNew Sessions: #{new_sessions.count}"
+    Logging.log "   Available: #{new_sessions_available.count}"
   end
 
   def migrate_available_sessions
     Ranker.rank_and_migrate!(old_sessions_available, new_sessions_available)
+
+    Logging.log "\nNew Sessions: #{new_sessions.count}"
+    Logging.log "   Available: #{new_sessions_available.count}\n"
   end
 
   def new_sessions_available

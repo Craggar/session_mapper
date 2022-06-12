@@ -54,4 +54,4 @@ new_times = [{
   ends_at: '2021-06-23T15:50:00Z'
 }]
 
-SessionMapper.call(old_times, new_times)
+pp SessionMapper.call(old_times, new_times)
