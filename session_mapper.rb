@@ -2,8 +2,6 @@ require 'time'
 
 class SessionMapper
   def self.call(old_times, new_times)
-    old_times.reject! { |old_time| old_time[:state] == "suspended" }.map {|attrs|}
-
     mapper = new(old_times, new_times)
     pp mapper.migrate_sessions
   end
@@ -16,14 +14,14 @@ class SessionMapper
 
   def migrate_sessions
     old_sessions.each_with_object({}).with_index do |(old_slot, new_mappings), index|
-      new_mappings[old_slot[:starts_at]] = new_sessions[index].tap do |new_slot_attrs|
-        new_slot_attrs[:state] = old_slot[:state]
+      new_mappings[old_slot.starts_at] = new_sessions[index].tap do |new_slot_attrs|
+        new_slot_attrs[:state] = old_slot.state
       end
     end
   end
 
   def old_sessions
-    old_times
+    @old_sessions ||= Slot.collection(old_times).reject(&:suspended?)
   end
 
   def new_sessions
@@ -31,12 +29,20 @@ class SessionMapper
 end
 
 class Slot
+  def self.collection(slots_hash)
+    slots_hash.map {|attrs| new(attrs) }
+  end
+
   attr_reader :starts_at, :ends_at, :state
 
   def initialize(opts = {})
     @starts_at = Time.parse(opts[:starts_at])
     @ends_at = Time.parse(opts[:ends_at])
     @state = opts[:state] || "available"
+  end
+
+  def suspended?
+    state == "suspended"
   end
 end
 
