@@ -14,8 +14,8 @@ class SessionMapper
 
   def migrate_sessions
     old_sessions.each_with_object({}).with_index do |(old_slot, new_mappings), index|
-      new_mappings[old_slot.starts_at] = new_sessions[index].tap do |new_slot_attrs|
-        new_slot_attrs[:state] = old_slot.state
+      new_mappings[old_slot.starts_at] = new_sessions[index].tap do |new_slot|
+        new_slot.set_state(old_slot.state)
       end
     end
   end
@@ -25,7 +25,8 @@ class SessionMapper
   end
 
   def new_sessions
-    new_times
+    @new_sessions ||= Slot.collection(new_times)
+  end
 end
 
 class Slot
@@ -43,6 +44,10 @@ class Slot
 
   def suspended?
     state == "suspended"
+  end
+
+  def set_state(new_state)
+    @state = new_state
   end
 end
 
