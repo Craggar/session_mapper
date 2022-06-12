@@ -21,34 +21,39 @@ class SessionMapper
   end
 
   def old_sessions
-    @old_sessions ||= Slot.collection(old_times).reject(&:suspended?)
+    @old_sessions ||= Slot::Old.collection(old_times).reject(&:suspended?)
   end
 
   def new_sessions
-    @new_sessions ||= Slot.collection(new_times)
+    @new_sessions ||= Slot::New.collection(new_times)
   end
 end
 
-class Slot
-  def self.collection(slots_hash)
-    slots_hash.map {|attrs| new(attrs) }
+module Slot
+  class Base
+    def self.collection(slots_hash)
+      slots_hash.map {|attrs| new(attrs) }
+    end
+
+    attr_reader :starts_at, :ends_at, :state
+
+    def initialize(opts = {})
+      @starts_at = Time.parse(opts[:starts_at])
+      @ends_at = Time.parse(opts[:ends_at])
+      @state = opts[:state] || "available"
+    end
+
+    def suspended?
+      state == "suspended"
+    end
+
+    def set_state(new_state)
+      @state = new_state
+    end
   end
 
-  attr_reader :starts_at, :ends_at, :state
-
-  def initialize(opts = {})
-    @starts_at = Time.parse(opts[:starts_at])
-    @ends_at = Time.parse(opts[:ends_at])
-    @state = opts[:state] || "available"
-  end
-
-  def suspended?
-    state == "suspended"
-  end
-
-  def set_state(new_state)
-    @state = new_state
-  end
+  class New < Base; end
+  class Old < Base; end
 end
 
 old_times = [{
