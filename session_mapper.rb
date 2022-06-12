@@ -78,6 +78,12 @@ module Session
   end
 
   class Old < Base
+    def deltas_from(new_sessions)
+      new_sessions.each_with_object({}) do |new_session, hash|
+        hash[new_session] = (new_session.starts_at - starts_at).abs
+      end
+    end
+
     def booked?
       state == "booked"
     end
