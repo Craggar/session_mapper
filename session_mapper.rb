@@ -32,13 +32,21 @@ class SessionMapper
 
     Logging.log "\nNew Sessions: #{new_sessions.count}"
     Logging.log "   Available: #{new_sessions_available.count}"
+
+    migrate_available_sessions
+
+    Logging.log "\nNew Sessions: #{new_sessions.count}"
+    Logging.log "   Available: #{new_sessions_available.count}"
   end
 
   private
 
   def migrate_booked_sessions
     Ranker.rank_and_migrate!(old_sessions_booked, new_sessions_available)
+  end
 
+  def migrate_available_sessions
+    Ranker.rank_and_migrate!(old_sessions_available, new_sessions_available)
   end
 
   def new_sessions_available
