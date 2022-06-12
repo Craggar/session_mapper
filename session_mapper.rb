@@ -39,6 +39,10 @@ class SessionMapper
     ranker = Ranker.new(old_sessions_booked, new_sessions_available)
     best_fit = ranker.lowest_total_delta
 
+    old_sessions_booked.each_with_index do |old_session, index|
+      new_session = best_fit[index][0]
+      new_session.assign(old_session)
+    end
   end
 
   def new_sessions_available
@@ -137,16 +141,27 @@ module Session
   class New < Base
     attr_reader :old_session
 
+    def assign(old_session)
+      old_session.assign_new_session(self)
+      @old_session = old_session
+    end
+
     def available?
       old_session.nil?
     end
   end
 
   class Old < Base
+    attr_reader :new_session
+
     def deltas_from(new_sessions)
       new_sessions.each_with_object({}) do |new_session, hash|
         hash[new_session] = (new_session.starts_at - starts_at).abs
       end
+    end
+
+    def assign_new_session(new_session)
+      @new_session = new_session
     end
 
     def booked?
