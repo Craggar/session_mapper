@@ -13,9 +13,9 @@ class SessionMapper
   end
 
   def migrate_sessions_naive
-    old_sessions.each_with_object({}).with_index do |(old_slot, new_mappings), index|
-      new_mappings[old_slot.starts_at] = new_sessions[index].tap do |new_slot|
-        new_slot.set_state(old_slot.state)
+    old_sessions.each_with_object({}).with_index do |(old_session, new_mappings), index|
+      new_mappings[old_session.starts_at] = new_sessions[index].tap do |new_session|
+        new_session.set_state(old_session.state)
       end
     end
   end
@@ -34,7 +34,7 @@ class SessionMapper
   end
 
   def new_sessions
-    @new_sessions ||= Slot::New.collection(new_times)
+    @new_sessions ||= Session::New.collection(new_times)
   end
 
   def old_sessions_booked
@@ -46,14 +46,14 @@ class SessionMapper
   end
 
   def old_sessions
-    @old_sessions ||= Slot::Old.collection(old_times)
+    @old_sessions ||= Session::Old.collection(old_times)
   end
 end
 
-module Slot
+module Session
   class Base
-    def self.collection(slots_hash)
-      slots_hash.map {|attrs| new(attrs) }
+    def self.collection(sessions_hash)
+      sessions_hash.map {|attrs| new(attrs) }
     end
 
     attr_reader :starts_at, :ends_at, :state
@@ -70,10 +70,10 @@ module Slot
   end
 
   class New < Base
-    attr_reader :old_slot
+    attr_reader :old_session
 
     def available?
-      old_slot.nil?
+      old_session.nil?
     end
   end
 
