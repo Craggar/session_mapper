@@ -16,10 +16,10 @@ class SessionMapper
   end
 
   def migrate_sessions_naive
-    old_sessions.each_with_object({}).with_index do |(old_session, new_mappings), index|
+    old_sessions.reject(&:suspended?).each_with_object({}).with_index do |(old_session, new_mappings), index|
       new_mappings[old_session.starts_at] = new_sessions[index].tap do |new_session|
         new_session.set_state(old_session.state)
-      end
+      end.summary
     end
   end
 
