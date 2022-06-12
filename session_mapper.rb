@@ -1,15 +1,31 @@
 class SessionMapper
   def self.call(old_times, new_times)
-    old_times.reject! { |old_time| old_time[:state] == "suspended" }
-    pp migrate_sessions(from: old_times, to: new_times)
+    old_times.reject! { |old_time| old_time[:state] == "suspended" }.map {|attrs|}
+
+    mapper = new(old_times, new_times)
+    pp mapper.migrate_sessions
   end
 
-  def self.migrate_sessions(from:, to:)
-    from.each_with_object({}).with_index do |(old_slot, new_mappings), index|
-      new_mappings[old_slot[:starts_at]] = to[index].tap do |new_slot_attrs|
+  attr_reader :old_times, :new_times
+  def initialize(old_times, new_times)
+    @old_times = old_times
+    @new_times = new_times
+  end
+
+  def migrate_sessions
+    old_sessions.each_with_object({}).with_index do |(old_slot, new_mappings), index|
+      new_mappings[old_slot[:starts_at]] = new_sessions[index].tap do |new_slot_attrs|
         new_slot_attrs[:state] = old_slot[:state]
       end
     end
+  end
+
+  def old_sessions
+    old_times
+  end
+
+  def new_sessions
+    new_times
   end
 end
 
