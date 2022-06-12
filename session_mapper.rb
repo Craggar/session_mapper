@@ -1,3 +1,5 @@
+require 'time'
+
 class SessionMapper
   def self.call(old_times, new_times)
     old_times.reject! { |old_time| old_time[:state] == "suspended" }.map {|attrs|}
@@ -26,6 +28,15 @@ class SessionMapper
 
   def new_sessions
     new_times
+end
+
+class Slot
+  attr_reader :starts_at, :ends_at, :state
+
+  def initialize(opts = {})
+    @starts_at = Time.parse(opts[:starts_at])
+    @ends_at = Time.parse(opts[:ends_at])
+    @state = opts[:state] || "available"
   end
 end
 
