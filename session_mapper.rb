@@ -25,9 +25,17 @@ class SessionMapper
     puts "Old Sessions: #{old_sessions.count}"
     puts "      Booked: #{old_sessions_booked.count}"
     puts "   Available: #{old_sessions_available.count}"
+
+    migrate_booked_sessions
   end
 
   private
+
+  def migrate_booked_sessions
+    ranker = Ranker.new(old_sessions_booked, new_sessions_available)
+
+    puts "Deltas:\n#{ranker.session_deltas}"
+  end
 
   def new_sessions_available
     new_sessions.select(&:available?)
@@ -47,6 +55,22 @@ class SessionMapper
 
   def old_sessions
     @old_sessions ||= Session::Old.collection(old_times)
+  end
+end
+
+class Ranker
+  attr_reader :old_sessions, :new_sessions
+
+  def initialize(old_sessions, new_sessions)
+    @old_sessions = old_sessions
+    @new_sessions = new_sessions
+    puts "ranking #{old_sessions.count} into #{new_sessions.count}"
+  end
+
+  def session_deltas
+    @session_deltas ||= old_sessions.map do |session|
+      session.deltas_from(new_sessions).sort_by { |_time, delta| delta }.to_h
+    end
   end
 end
 
