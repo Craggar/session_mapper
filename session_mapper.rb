@@ -29,6 +29,10 @@ class SessionMapper
 
   private
 
+  def new_sessions_available
+    new_sessions.select(&:available?)
+  end
+
   def new_sessions
     @new_sessions ||= Slot::New.collection(new_times)
   end
@@ -65,7 +69,14 @@ module Slot
     end
   end
 
-  class New < Base; end
+  class New < Base
+    attr_reader :old_slot
+
+    def available?
+      old_slot.nil?
+    end
+  end
+
   class Old < Base
     def booked?
       state == "booked"
