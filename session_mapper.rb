@@ -3,7 +3,7 @@ require 'time'
 class SessionMapper
   def self.call(old_times, new_times)
     mapper = new(old_times, new_times)
-    pp mapper.migrate_sessions
+    mapper.migrate_sessions
   end
 
   attr_reader :old_times, :new_times
@@ -21,10 +21,11 @@ class SessionMapper
   end
 
   def migrate_sessions
-    puts "New Sessions: #{new_sessions.count}"
-    puts "Old Sessions: #{old_sessions.count}"
-    puts "      Booked: #{old_sessions_booked.count}"
-    puts "   Available: #{old_sessions_available.count}"
+    Logging.log "Old Sessions: #{old_sessions.count}"
+    Logging.log "      Booked: #{old_sessions_booked.count}"
+    Logging.log "   Available: #{old_sessions_available.count}"
+    Logging.log "New Sessions: #{new_sessions.count}"
+    Logging.log "   Available: #{new_sessions_available.count}"
 
     migrate_booked_sessions
   end
@@ -34,7 +35,6 @@ class SessionMapper
   def migrate_booked_sessions
     ranker = Ranker.new(old_sessions_booked, new_sessions_available)
 
-    puts "Deltas:\n#{ranker.session_deltas}"
   end
 
   def new_sessions_available
@@ -64,7 +64,7 @@ class Ranker
   def initialize(old_sessions, new_sessions)
     @old_sessions = old_sessions
     @new_sessions = new_sessions
-    puts "ranking #{old_sessions.count} into #{new_sessions.count}"
+    Logging.log "ranking #{old_sessions.count} old sessions into #{new_sessions.count} new_sessions"
   end
 
   def session_deltas
@@ -115,6 +115,16 @@ module Session
     def available?
       state == "available"
     end
+  end
+end
+
+class Logging
+  ENABLED = true
+
+  def self.log(msg)
+    return unless ENABLED
+
+    puts msg
   end
 end
 
