@@ -37,8 +37,7 @@ class SessionMapper
   private
 
   def migrate_booked_sessions
-    ranker = Ranker.new(old_sessions_booked, new_sessions_available)
-    ranker.apply_best_fit
+    Ranker.rank_and_migrate!(old_sessions_booked, new_sessions_available)
 
   end
 
@@ -66,13 +65,17 @@ end
 class Ranker
   attr_reader :old_sessions, :new_sessions
 
+  def self.rank_and_migrate!(old_sessions, new_sessions)
+    new(old_sessions, new_sessions).apply_best_fit!
+  end
+
   def initialize(old_sessions, new_sessions)
     @old_sessions = old_sessions
     @new_sessions = new_sessions
     Logging.log "ranking #{old_sessions.count} old sessions into #{new_sessions.count} new_sessions"
   end
 
-  def apply_best_fit
+  def apply_best_fit!
     old_sessions.each_with_index do |old_session, index|
       new_session = lowest_total_delta[index][0]
       new_session.assign(old_session)
